@@ -20,6 +20,8 @@ require 'session'
 #   :password: plain_text_password
 # To turn off password confirmation prompts:
 #   :confirm_prompt: false
+# To set the path to the yak data file:
+#   :data_file: /path/to/file
 
 class Yak
 
@@ -34,11 +36,18 @@ class Yak
   #   ...
 
   def self.run argv=ARGV
-    config = DEFAULT_CONFIG.merge load_config
+    user = `whoami`.chomp
+
+    check_user_setup user
+
+    config = DEFAULT_CONFIG.merge load_config(user)
 
     options = parse_args argv
 
-    yak = new `whoami`.chomp, config
+    yak = new user, config
+
+    yak.connect_data
+    yak.start_session
 
     args = [options[:action], yak, options[:key], options[:value]].compact
 
@@ -51,18 +60,60 @@ class Yak
 
 
   ##
-  # Load the ~/.yakrc file and return. Creates ~/.yakrc with the
-  # default config if missing.
+  # Setup yak for first run if it hasn't been.
 
-  def self.load_config
-    config_file = File.expand_path "~/.yakrc"
+  def self.check_user_setup user
+    user_config_file = yak_config_file user
 
-    if !File.file?(config_file)
-      File.open(config_file, "w+"){|f| f.write DEFAULT_CONFIG.to_yaml }
-      $stderr << "Created Yak config file #{config_file}\n"
+    return if File.file? user_config_file
+
+    hl = HighLine.new $stdin, $stderr
+    hl.say "Thanks for installing Yak!"
+
+    data_file_opts = []
+
+    usrhome = File.expand_path "~#{user}/"
+    dropbox = File.expand_path "~#{user}/Dropbox"
+
+    data_file_opts << dropbox if File.directory? dropbox
+    data_file_opts << usrhome if File.directory? usrhome
+
+    data_path = hl.choose do |menu|
+      menu.prompt = "Where would you like your data file to live?"
+      menu.choices(*data_file_opts)
+      menu.choice "other" do
+        hl.ask "Enter path:"
+      end
     end
 
-    YAML.load_file config_file
+    data_file  = File.join data_path, ".yakdata"
+    new_config = DEFAULT_CONFIG.merge(:data_file => data_file)
+
+    make_config_file user, new_config
+    exit 1
+  end
+
+
+  ##
+  # Load the ~/.yakrc file and return.
+
+  def self.load_config user
+    user_config_file = yak_config_file user
+
+    YAML.load_file user_config_file
+  end
+
+
+  ##
+  # Create a new user config file.
+
+  def self.make_config_file user, new_config=DEFAULT_CONFIG
+    user_config_file = yak_config_file user
+    config_str = new_config.to_yaml
+
+    File.open(user_config_file, "w+"){|f| f.write config_str }
+    $stderr << "Created Yak config file #{user_config_file}:\n"
+    $stderr << "#{config_str}\n"
   end
 
 
@@ -84,7 +135,7 @@ class Yak
 
 
   def self.print_password yak, name
-    $stdout << yak.retrieve(name)
+    $stdout << "#{yak.retrieve(name)}\n"
   end
 
 
@@ -120,6 +171,11 @@ class Yak
                end
 
     Session::Bash.new.execute copy_cmd
+  end
+
+
+  def self.yak_config_file user
+    File.expand_path "~#{user}/.yakrc"
   end
 
 
@@ -208,12 +264,12 @@ Retrieved passwords get copied to the clipboard by default.
     @confirm_prompt = options[:confirm_prompt] if
       options.has_key? :confirm_prompt
 
-    @yak_dir = File.expand_path "~#{@user}/.yak"
+    @yak_dir = File.expand_path "~#{user}/.yak"
     FileUtils.mkdir @yak_dir unless File.directory? @yak_dir
 
     @pid_file      = File.join @yak_dir, "pid"
     @password_file = File.join @yak_dir, "password"
-    @data_file     = File.join @yak_dir, "data"
+    @data_file     = options[:data_file] || File.join(@yak_dir, "data")
 
     @session_pid = nil
     @session_pid = File.read(@pid_file).to_i if File.file? @pid_file
@@ -223,9 +279,6 @@ Retrieved passwords get copied to the clipboard by default.
     @cipher = OpenSSL::Cipher::Cipher.new "aes-256-cbc"
 
     @session_length = options.has_key?(:session) ? options[:session] : 30
-
-    connect_data
-    start_session
   end
 
 
@@ -272,11 +325,11 @@ Retrieved passwords get copied to the clipboard by default.
   # user if a password file is unavailable. Returns a sha1 of the password
   # passed as an arg.
 
-  def get_password plain_password=nil
+  def get_password plain_pswd=nil
     password   = File.read @password_file if File.file? @password_file
 
     password ||=
-      Digest::SHA1.hexdigest(plain_password || request_password("Yak Password"))
+      Digest::SHA1.hexdigest(plain_pswd || request_password("Master Password"))
 
     password
   end

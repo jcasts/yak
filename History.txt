@@ -8,7 +8,11 @@
 
     * Added -p option to print to stdout
 
+    * Customizable data file location
+
   * Bugfixes:
+
+    * First run has setup
 
     * Cipher error catching updated
 
