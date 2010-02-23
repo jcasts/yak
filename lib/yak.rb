@@ -164,20 +164,15 @@ class Yak
 
   def self.send_to_clipboard string
     copy_cmd = case RUBY_PLATFORM
-               when /darwin/
-                 "echo -n \"#{string}\" | pbcopy"
-               when /linux/
-                 "echo -n \"#{string}\" | xclip"
-               when /cigwin/
-                 "echo -n \"#{string}\" | putclip"
-               when /(win|mingw)/
-                 "echo \"#{string}\" | clip"
+               when /darwin/ then "pbcopy"
+               when /linux/  then "xclip"
+               when /cygwin/ then "putclip"
                else
                  $stderr << "No clipboad cmd for platform #{RUBY_PLATFORM}\n"
                  exit 1
                end
 
-    Session::Bash.new.execute copy_cmd
+    Session::Bash.new.execute "echo -n \"#{string}\ | #{copy_cmd}"
   end
 
 
