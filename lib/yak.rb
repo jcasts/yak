@@ -23,7 +23,7 @@ require 'session'
 
 class Yak
 
-  VERSION = "1.0.0"
+  VERSION = "1.0.2"
 
   DEFAULT_CONFIG = {:session => 30}
 
