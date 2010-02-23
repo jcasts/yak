@@ -1,17 +1,17 @@
-= Pez
+= Yak
 
 == Description
 
-Pez is a simple command line app to store and retrieve passwords securely
+Yak is a simple command line app to store and retrieve passwords securely
 under a master password, and allows one password repository per system user.
 Retrieved passwords get copied to the clipboard by default.
 
 
 == Configuration
 
-Config can be set in ~/.pezrc.
+Config can be set in ~/.yakrc.
 
-Session is the length of time in seconds that Pez will remember the
+Session is the length of time in seconds that Yak will remember the
 master password:
   :session: 30
 
@@ -27,39 +27,39 @@ Turn off password confirmation prompts when a new password is entered:
 
 == Usage
 
-Pez will always prompt you for the master password unless a pez session is
-present, or the :password option is set in ~/.pezrc.
-Pez sessions get refreshed everytime pez is called.
+Yak will always prompt you for the master password unless a yak session is
+present, or the :password option is set in ~/.yakrc.
+Yak sessions get refreshed everytime yak is called.
 
 Adding a new password:
-  $ pez -a gmail
+  $ yak -a gmail
   # prompts user for gmail password to save
 
-  $ pez -a gmail my_password
+  $ yak -a gmail my_password
   # uses my_password as gmail password and overwrites old value
 
 Retrieving a saved password:
-  $ pez gmail
+  $ yak gmail
   # copies the gmail password to the clipboard
 
-  $ pez --list gmail
+  $ yak --list gmail
   >> gmail: my_password
   # matches all password keys to /gmail/ and outputs to stdout
 
 Removing a stored password:
-  $ pez -r gmail
+  $ yak -r gmail
   # deletes gmail entry completely
 
 Changing the master password:
-  $ pez -n
+  $ yak -n
   # prompts for old password first, then the new password
 
 Listing key/password pairs:
-  $ pez --list
+  $ yak --list
   # returns all saved pairs
 
-  $ pez --list key
+  $ yak --list key
   # returns all saved pairs with a key matching /key/
 
-  $ pez --list ^key$
+  $ yak --list ^key$
   # returns unique saved pair with a key matching /^key$/

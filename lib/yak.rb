@@ -9,11 +9,11 @@ require 'session'
 
 
 ##
-# Pez is a simple command line app to store and retrieve passwords securely.
+# Yak is a simple command line app to store and retrieve passwords securely.
 # Retrieved passwords get copied to the clipboard by default.
-# Config can be set in ~/.pezrc:
+# Config can be set in ~/.yakrc:
 #   :session: 30
-# Session is the length of time in seconds that Pez will remember the
+# Session is the length of time in seconds that Yak will remember the
 # master password. If using sessions is not desired, set:
 #   :session: false
 # To always set the password by default, use:
@@ -21,16 +21,16 @@ require 'session'
 # To turn off password confirmation prompts:
 #   :confirm_prompt: false
 
-class Pez
+class Yak
 
   VERSION = "1.0.0"
 
   DEFAULT_CONFIG = {:session => 30}
 
   ##
-  # Run Pez with argv:
-  #   Pez.run %w{key}
-  #   Pez.run %w{--add key}
+  # Run Yak with argv:
+  #   Yak.run %w{key}
+  #   Yak.run %w{--add key}
   #   ...
 
   def self.run argv=ARGV
@@ -38,9 +38,9 @@ class Pez
 
     options = parse_args argv
 
-    pez = new `whoami`.chomp, config
+    yak = new `whoami`.chomp, config
 
-    args = [options[:action], pez, options[:key], options[:value]].compact
+    args = [options[:action], yak, options[:key], options[:value]].compact
 
     self.send(*args)
 
@@ -51,51 +51,51 @@ class Pez
 
 
   ##
-  # Load the ~/.pezrc file and return. Creates ~/.pezrc with the
+  # Load the ~/.yakrc file and return. Creates ~/.yakrc with the
   # default config if missing.
 
   def self.load_config
-    config_file = File.expand_path "~/.pezrc"
+    config_file = File.expand_path "~/.yakrc"
 
     if !File.file?(config_file)
       File.open(config_file, "w+"){|f| f.write DEFAULT_CONFIG.to_yaml }
-      $stderr << "Created Pez config file #{config_file}"
+      $stderr << "Created Yak config file #{config_file}\n"
     end
 
     YAML.load_file config_file
   end
 
 
-  def self.remove pez, name
-    pez.remove name
-    pez.write_data
+  def self.remove yak, name
+    yak.remove name
+    yak.write_data
   end
 
 
-  def self.store pez, name, value=nil
-    pez.store name, value
-    pez.write_data
+  def self.store yak, name, value=nil
+    yak.store name, value
+    yak.write_data
   end
 
 
-  def self.retrieve pez, name
-    send_to_clipboard pez.retrieve(name)
+  def self.retrieve yak, name
+    send_to_clipboard yak.retrieve(name)
   end
 
 
-  def self.list pez, name=nil
+  def self.list yak, name=nil
     key_regex = /#{name || ".+"}/
 
-    pez.data.each do |key, value|
+    yak.data.each do |key, value|
       $stdout << "#{key}: #{value}\n" if key =~ key_regex
     end
   end
 
 
-  def self.new_password pez, value=nil
-    pez.new_password value
-    pez.write_data
-    pez.start_session
+  def self.new_password yak, value=nil
+    yak.new_password value
+    yak.write_data
+    yak.start_session
   end
 
 
@@ -110,7 +110,7 @@ class Pez
                when /(win|mingw)/
                  "echo \"#{string}\" | clip"
                else
-                 $stderr << "No clipboad cmd for platform #{RUBY_PLATFORM}"
+                 $stderr << "No clipboad cmd for platform #{RUBY_PLATFORM}\n"
                  exit 1
                end
 
@@ -127,7 +127,7 @@ class Pez
       opt.release = nil
 
       opt.banner = <<-EOF
-Pez is a simple app to store and retrieve passwords securely.
+#{opt.program_name} is a simple app to store and retrieve passwords securely.
 Retrieved passwords get copied to the clipboard by default.
 
   Usage:
@@ -179,10 +179,10 @@ Retrieved passwords get copied to the clipboard by default.
   attr_reader :user, :data
 
   ##
-  # Create a new Pez instance for a given user:
-  #   Pez.new "my_user"
-  #   Pez.new "my_user", :session => 10
-  #   Pez.new `whoami`.chomp, :session => false
+  # Create a new Yak instance for a given user:
+  #   Yak.new "my_user"
+  #   Yak.new "my_user", :session => 10
+  #   Yak.new `whoami`.chomp, :session => false
 
   def initialize user, options={}
     @user     = user
@@ -192,12 +192,12 @@ Retrieved passwords get copied to the clipboard by default.
     @confirm_prompt = options[:confirm_prompt] if
       options.has_key? :confirm_prompt
 
-    @pez_dir = File.expand_path "~#{@user}/.pez"
-    FileUtils.mkdir @pez_dir unless File.directory? @pez_dir
+    @yak_dir = File.expand_path "~#{@user}/.yak"
+    FileUtils.mkdir @yak_dir unless File.directory? @yak_dir
 
-    @pid_file      = File.join @pez_dir, "pid"
-    @password_file = File.join @pez_dir, "password"
-    @data_file     = File.join @pez_dir, "data"
+    @pid_file      = File.join @yak_dir, "pid"
+    @password_file = File.join @yak_dir, "password"
+    @data_file     = File.join @yak_dir, "data"
 
     @session_pid = nil
     @session_pid = File.read(@pid_file).to_i if File.file? @pid_file
@@ -214,7 +214,7 @@ Retrieved passwords get copied to the clipboard by default.
 
 
   ##
-  # Start a new session during which Pez will remember the user's password.
+  # Start a new session during which Yak will remember the user's password.
 
   def start_session
     return unless @session_length
@@ -260,7 +260,7 @@ Retrieved passwords get copied to the clipboard by default.
     password   = File.read @password_file if File.file? @password_file
 
     password ||=
-      Digest::SHA1.hexdigest(plain_password || request_password("Pez Password"))
+      Digest::SHA1.hexdigest(plain_password || request_password("Yak Password"))
 
     password
   end
@@ -336,7 +336,7 @@ Retrieved passwords get copied to the clipboard by default.
 
 
   ##
-  # Encrypt and write the Pez data back to the data file.
+  # Encrypt and write the Yak data back to the data file.
 
   def write_data password=@password
     data = encrypt @data.to_yaml, password
@@ -361,7 +361,7 @@ Retrieved passwords get copied to the clipboard by default.
     end
 
     if password != password_confirm
-      $stderr << "Password and password confirmation did not match."
+      $stderr << "Password and password confirmation did not match.\n"
     else
       password.chomp
     end

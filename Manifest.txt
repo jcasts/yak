@@ -1,5 +1,5 @@
-bin/pez
-lib/pez.rb
+bin/yak
+lib/yak.rb
 History.txt
 Manifest.txt
 Rakefile

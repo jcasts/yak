@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby -w
 
-require 'pez'
+require 'yak'
 
-Pez.run
+Yak.run
