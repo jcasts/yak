@@ -90,7 +90,6 @@ class Yak
     new_config = DEFAULT_CONFIG.merge(:data_file => data_file)
 
     make_config_file user, new_config
-    exit 1
   end
 
 
@@ -136,6 +135,11 @@ class Yak
 
   def self.print_password yak, name
     $stdout << "#{yak.retrieve(name)}\n"
+  end
+
+
+  def self.delete_data yak
+    yak.delete_data_file! true
   end
 
 
@@ -231,6 +235,11 @@ Retrieved passwords get copied to the clipboard by default.
         options[:action] = :print_password
         options[:key]    = key
       end
+
+      opt.on('--delete-data',
+             'Delete the data file - lose all saved info') do
+        options[:action] = :delete_data
+      end
     end
 
     opts.parse! argv
@@ -274,7 +283,7 @@ Retrieved passwords get copied to the clipboard by default.
     @session_pid = nil
     @session_pid = File.read(@pid_file).to_i if File.file? @pid_file
 
-    @password = get_password options[:password]
+    @password = nil
 
     @cipher = OpenSSL::Cipher::Cipher.new "aes-256-cbc"
 
@@ -296,7 +305,7 @@ Retrieved passwords get copied to the clipboard by default.
     end
 
     File.open(@pid_file,      "w+"){|f| f.write pid }
-    File.open(@password_file, "w+"){|f| f.write @password }
+    File.open(@password_file, "w+"){|f| f.write sha_password }
 
     Process.detach pid
   end
@@ -321,15 +330,42 @@ Retrieved passwords get copied to the clipboard by default.
 
 
   ##
+  # Check if the data file exists.
+
+  def data_file_exists?
+    File.file? @data_file
+  end
+
+
+  ##
+  # Deletes the user's data file forever!
+
+  def delete_data_file! confirm=false
+    confirmed = confirm ? @input.agree("Delete all passwords? (y/n)") : true
+    FileUtils.rm_f(@data_file) if confirmed
+  end
+
+
+  ##
+  # Get the SHA-encrypted password used for encoding data.
+
+  def sha_password
+    new_password unless data_file_exists?
+    @password ||= get_password
+  end
+
+
+  ##
   # Get a password from either the password file or by prompting the
   # user if a password file is unavailable. Returns a sha1 of the password
   # passed as an arg.
 
   def get_password plain_pswd=nil
-    password   = File.read @password_file if File.file? @password_file
+    password = File.read @password_file if File.file?(@password_file)
 
-    password ||=
-      Digest::SHA1.hexdigest(plain_pswd || request_password("Master Password"))
+    plain_pswd ||= request_password "Master Password" if !password
+
+    password ||= Digest::SHA1.hexdigest plain_pswd
 
     password
   end
@@ -340,8 +376,8 @@ Retrieved passwords get copied to the clipboard by default.
   # Prompts for password confirmation as well.
 
   def new_password password=nil
-    password ||= request_new_password "New Password"
-    @password  = Digest::SHA1.hexdigest password if password
+    password ||= request_new_password "Set New Master Password"
+    @password  = Digest::SHA1.hexdigest password
   end
 
 
@@ -349,13 +385,14 @@ Retrieved passwords get copied to the clipboard by default.
   # Loads and decrypts the data file into the @data attribute.
 
   def connect_data
-    @data = if File.file? @data_file
-              data = ""
-              File.open(@data_file, "rb"){|f| data << f.read }
-              YAML.load decrypt(data)
-            else
-              {}
-            end
+    if data_file_exists?
+      data = ""
+      File.open(@data_file, "rb"){|f| data << f.read }
+      @data = YAML.load decrypt(data)
+    else
+      @data = {}
+      write_data
+    end
   end
 
 
@@ -387,27 +424,23 @@ Retrieved passwords get copied to the clipboard by default.
   ##
   # Decrypt a string with a given password.
 
-  def decrypt string, password=@password
-    @cipher.decrypt
-    @cipher.key = password
-    get_cypher_out string
+  def decrypt string, password=nil
+    get_cypher_out :decrypt, string, password
   end
 
 
   ##
   # Encrypt a string with a given password.
 
-  def encrypt string, password=@password
-    @cipher.encrypt
-    @cipher.key = password
-    get_cypher_out string
+  def encrypt string, password=nil
+    get_cypher_out :encrypt, string, password
   end
 
 
   ##
   # Encrypt and write the Yak data back to the data file.
 
-  def write_data password=@password
+  def write_data password=nil
     data = encrypt @data.to_yaml, password
     File.open(@data_file, "w+"){|f| f.write data}
   end
@@ -445,7 +478,12 @@ Retrieved passwords get copied to the clipboard by default.
   end
 
 
-  def get_cypher_out string
+  def get_cypher_out method, string, password=nil
+    password ||= sha_password
+
+    @cipher.send method
+    @cipher.key = password
+
     out = @cipher.update string
     out << @cipher.final
     out

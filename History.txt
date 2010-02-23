@@ -8,6 +8,8 @@
 
     * Added -p option to print to stdout
 
+    * Added delete data option
+
     * Customizable data file location
 
   * Bugfixes:
