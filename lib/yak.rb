@@ -25,9 +25,12 @@ require 'session'
 
 class Yak
 
-  VERSION = "1.0.3"
+  VERSION = "1.0.4"
 
   DEFAULT_CONFIG = {:session => 30}
+
+  # Different versions of ruby have a different namespace for CipherError
+  CIPHER_ERROR = OpenSSL::Cipher::CipherError rescue OpenSSL::CipherError
 
   ##
   # Run Yak with argv:
@@ -53,7 +56,7 @@ class Yak
 
     self.send(*args)
 
-  rescue OpenSSL::Cipher::CipherError => e
+  rescue CIPHER_ERROR => e
     $stderr << "Bad password.\n"
     exit 1
   end
