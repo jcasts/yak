@@ -150,7 +150,7 @@ class Yak
     key_regex = /#{name || ".+"}/
 
     yak.data.each do |key, value|
-      $stdout << "#{key}: #{value}\n" if key =~ key_regex
+      $stdout << "#{key}\n" if key =~ key_regex
     end
   end
 
@@ -218,7 +218,7 @@ Retrieved passwords get copied to the clipboard by default.
       end
 
       opt.on('-l', '--list [REGEX]',
-             'List key/password pairs to the stdout') do |key|
+             'List keys to the stdout') do |key|
         options[:action] = :list
         options[:key]    = key
       end

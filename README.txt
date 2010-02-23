@@ -43,9 +43,9 @@ Retrieving a saved password:
   $ yak gmail
   # copies the gmail password to the clipboard
 
-  $ yak --list gmail
-  >> gmail: my_password
-  # matches all password keys to /gmail/ and outputs to stdout
+  $ yak -p gmail
+  >> my_password
+  # outputs gmail password to stdout
 
 Removing a stored password:
   $ yak -r gmail
@@ -55,12 +55,12 @@ Changing the master password:
   $ yak -n
   # prompts for old password first, then the new password
 
-Listing key/password pairs:
+Listing keys:
   $ yak --list
   # returns all saved pairs
 
   $ yak --list key
-  # returns all saved pairs with a key matching /key/
+  # returns all keys matching /key/
 
   $ yak --list ^key$
-  # returns unique saved pair with a key matching /^key$/
+  # returns unique key matching /^key$/
