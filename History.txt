@@ -1,4 +1,18 @@
-=== 1.0.1 / 2010-02-22
+=== 1.0.3 / 2010-02-22
+
+  * Enhancements:
+
+    * Added Dropbox support
+
+    * Added setup routine for first run
+
+    * Added -p option to print to stdout
+
+  * Bugfixes:
+
+    * Cipher error catching updated
+
+=== 1.0.2 / 2010-02-22
 
   * Renaming to Yak
 

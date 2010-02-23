@@ -23,7 +23,7 @@ require 'session'
 
 class Yak
 
-  VERSION = "1.0.2"
+  VERSION = "1.0.3"
 
   DEFAULT_CONFIG = {:session => 30}
 
@@ -44,7 +44,7 @@ class Yak
 
     self.send(*args)
 
-  rescue OpenSSL::CipherError => e
+  rescue OpenSSL::Cipher::CipherError => e
     $stderr << "Bad password.\n"
     exit 1
   end
@@ -80,6 +80,11 @@ class Yak
 
   def self.retrieve yak, name
     send_to_clipboard yak.retrieve(name)
+  end
+
+
+  def self.print_password yak, name
+    $stdout << yak.retrieve(name)
   end
 
 
@@ -164,6 +169,12 @@ Retrieved passwords get copied to the clipboard by default.
              'Update the password used for encryption') do |value|
         options[:action] = :new_password
       end
+
+      opt.on('-p', '--print KEY',
+             'Print the password for the given key to stdout') do |key|
+        options[:action] = :print_password
+        options[:key]    = key
+      end
     end
 
     opts.parse! argv
@@ -171,6 +182,11 @@ Retrieved passwords get copied to the clipboard by default.
     options[:action] ||= :retrieve
     options[:key]    ||= argv.shift
     options[:value]  ||= argv.shift
+
+    if options[:action] == :retrieve && options[:key].nil?
+      $stderr << opts.to_s
+      exit 1
+    end
 
     options
   end
