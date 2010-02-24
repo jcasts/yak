@@ -28,8 +28,10 @@ require 'session'
 
 class Yak
 
+  # Version of Yak.
   VERSION = "1.0.4"
 
+  # Default config used.
   DEFAULT_CONFIG = {:session => 30, :bash_completion => true}
 
   # Different versions of ruby have a different namespace for CipherError
@@ -153,11 +155,17 @@ class Yak
   end
 
 
+  ##
+  # Remove a key/value pair from a yak instance.
+
   def self.remove yak, name
     yak.remove name
     yak.write_data
   end
 
+
+  ##
+  # Add a key/value pair to a yak instance.
 
   def self.store yak, name, value=nil
     yak.store name, value
@@ -165,20 +173,32 @@ class Yak
   end
 
 
+  ##
+  # Get a password value from a yak instance and copy it to the clipboard.
+
   def self.retrieve yak, name
     send_to_clipboard yak.retrieve(name)
   end
 
+
+  ##
+  # Get a password value from a yak instance and output it to the stdout.
 
   def self.print_password yak, name
     $stdout << "#{yak.retrieve(name)}\n"
   end
 
 
+  ##
+  # Delete the data file of a yak instance after confirming with the user.
+
   def self.delete_data yak
     yak.delete_data_file! true
   end
 
+
+  ##
+  # List matched keys of a yak instance.
 
   def self.list yak, name=nil
     key_regex = /#{name || ".+"}/
@@ -189,12 +209,20 @@ class Yak
   end
 
 
+  ##
+  # Assign a new master password to a yak instance.
+  # Prompts the user if no value is given.
+
   def self.new_password yak, value=nil
     yak.new_password value
     yak.write_data
     yak.start_session
   end
 
+
+  ##
+  # Send the passed string to the keyboard.
+  # Only supports darwin (pbcopy), linux (xclip) and cygwin (putclip).
 
   def self.send_to_clipboard string
     copy_cmd = case RUBY_PLATFORM
@@ -210,10 +238,16 @@ class Yak
   end
 
 
+  ##
+  # Get a user's yak config file. Typically ~user/.yakrc.
+
   def self.yak_config_file user
     File.expand_path "~#{user}/.yakrc"
   end
 
+
+  ##
+  # Parse ARGV data.
 
   def self.parse_args argv
     options = {}
@@ -498,7 +532,7 @@ Retrieved passwords get copied to the clipboard by default.
 
 
   ##
-  # Write the key list file
+  # Write the key list file. Used for bash completion.
 
   def write_key_list
     File.open(@key_list_file, "w+"){|f| f.write @data.keys.join(" ") }
@@ -536,6 +570,11 @@ Retrieved passwords get copied to the clipboard by default.
     @input.ask("#{req_str}:"){|q| q.echo = false}
   end
 
+
+  ##
+  # Get the cypher output:
+  #   get_cypher_out :encrypt, plain_string
+  #   get_cypher_out :decrypt, encrypted_string
 
   def get_cypher_out method, string, password=nil
     password ||= sha_password
