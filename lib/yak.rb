@@ -29,7 +29,7 @@ require 'session'
 class Yak
 
   # Version of Yak.
-  VERSION = "1.0.4"
+  VERSION = "1.0.5"
 
   # Default config used.
   DEFAULT_CONFIG = {:session => 30, :bash_completion => true}
@@ -62,6 +62,8 @@ class Yak
     self.send(*args)
 
   rescue CIPHER_ERROR => e
+    yak.end_session
+
     $stderr << "Bad password.\n"
     exit 1
   end
@@ -370,15 +372,15 @@ Retrieved passwords get copied to the clipboard by default.
 
     end_session if has_session?
 
-    pid = fork do
+    @session_pid = fork do
       sleep @session_length
       remove_session_files
     end
 
     File.open(@password_file, "w+"){|f| f.write pswd }
-    File.open(@pid_file,      "w+"){|f| f.write pid }
+    File.open(@pid_file,      "w+"){|f| f.write @session_pid }
 
-    Process.detach pid
+    Process.detach @session_pid
   end
 
 

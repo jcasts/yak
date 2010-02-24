@@ -1,3 +1,9 @@
+=== 1.0.5 / 2010-02-23
+
+  * Bugfixes:
+
+    * Fix for killing bad password sessions
+
 === 1.0.4 / 2010-02-23
 
   * Enhancemennts:
