@@ -100,10 +100,13 @@ class Yak
       "../script/yak_completion"
     completion_file = File.expand_path completion_file
 
-    if File.directory? completion_dir
-      FileUtils.cp completion_file, File.join(completion_dir, ".")
+    success = `sudo cp #{completion_file} #{completion_dir}/. && echo 'true'`
+    success.chomp!
+
+    if success == "true"
+      $stdout << "\nCopied yak_completion to #{completion_dir}\n\n"
     else
-      $stderr << "\nError: Could not find directory #{completion_dir}\n"
+      $stderr << "\nError: Could not copy yak_completion #{completion_dir}\n"
       $stderr << "If you would like to use yak's bash completion, "
       $stderr << "make sure to source #{completion_file} in .bashrc\n\n"
     end
@@ -229,7 +232,7 @@ class Yak
   def self.send_to_clipboard string
     copy_cmd = case RUBY_PLATFORM
                when /darwin/ then "pbcopy"
-               when /linux/  then "xclip"
+               when /linux/  then "xclip -selection clipboard"
                when /cygwin/ then "putclip"
                else
                  $stderr << "No clipboad cmd for platform #{RUBY_PLATFORM}\n"
