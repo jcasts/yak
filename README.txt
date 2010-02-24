@@ -59,7 +59,7 @@ Changing the master password:
 
 Listing keys:
   $ yak --list
-  # returns all saved pairs
+  # returns all saved keys
 
   $ yak --list key
   # returns all keys matching /key/
