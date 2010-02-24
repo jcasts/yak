@@ -437,8 +437,7 @@ Retrieved passwords get copied to the clipboard by default.
   # Get the SHA-encrypted password used for encoding data.
 
   def sha_password
-    new_password unless data_file_exists?
-    @password ||= get_password
+    @password ||= data_file_exists? ? get_password : new_password
   end
 
 
