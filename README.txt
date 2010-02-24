@@ -1,5 +1,7 @@
 = Yak
 
+http://github.com/yaksnrainbows/yak
+
 == Description
 
 Yak is a simple command line app to store and retrieve passwords securely

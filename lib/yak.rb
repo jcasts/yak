@@ -22,12 +22,15 @@ require 'session'
 #   :confirm_prompt: false
 # To set the path to the yak data file:
 #   :data_file: /path/to/file
+# Using bash completion for stored keys:
+#   :bash_completion: true    #=> completion only available during session
+#   :bash_completion: :always #=> completion always available
 
 class Yak
 
   VERSION = "1.0.4"
 
-  DEFAULT_CONFIG = {:session => 30}
+  DEFAULT_CONFIG = {:session => 30, :bash_completion => true}
 
   # Different versions of ruby have a different namespace for CipherError
   CIPHER_ERROR = OpenSSL::Cipher::CipherError rescue OpenSSL::CipherError
@@ -49,8 +52,8 @@ class Yak
 
     yak = new user, config
 
-    yak.connect_data
     yak.start_session
+    yak.connect_data
 
     args = [options[:action], yak, options[:key], options[:value]].compact
 
@@ -71,8 +74,42 @@ class Yak
     return if File.file? user_config_file
 
     hl = HighLine.new $stdin, $stderr
-    hl.say "Thanks for installing Yak!"
+    hl.say "\n\nThanks for installing Yak!\n\n"
 
+    setup_bash_completion
+
+    data_file  = prompt_data_loc user, hl
+
+    new_config = DEFAULT_CONFIG.merge(:data_file => data_file)
+
+    make_config_file user, new_config
+  end
+
+
+  ##
+  # Check and setup bash completion.
+
+  def self.setup_bash_completion
+    completion_dir  = "/etc/bash_completion.d"
+
+    completion_file = File.join File.dirname(__FILE__),
+      "../script/yak_completion"
+    completion_file = File.expand_path completion_file
+
+    if File.directory? completion_dir
+      FileUtils.cp completion_file, File.join(completion_dir, ".")
+    else
+      $stderr << "\nError: Could not find directory #{completion_dir}\n"
+      $stderr << "If you would like to use yak's bash completion, "
+      $stderr << "make sure to source #{completion_file} in .bashrc\n\n"
+    end
+  end
+
+
+  ##
+  # Prompt the user for the location of the data file.
+
+  def self.prompt_data_loc user, hl
     data_file_opts = []
 
     usrhome = File.expand_path "~#{user}/"
@@ -89,10 +126,7 @@ class Yak
       end
     end
 
-    data_file  = File.join data_path, ".yakdata"
-    new_config = DEFAULT_CONFIG.merge(:data_file => data_file)
-
-    make_config_file user, new_config
+    File.join data_path, ".yakdata"
   end
 
 
@@ -115,7 +149,7 @@ class Yak
 
     File.open(user_config_file, "w+"){|f| f.write config_str }
     $stderr << "Created Yak config file #{user_config_file}:\n"
-    $stderr << "#{config_str}\n"
+    $stderr << "#{config_str}---\n\n"
   end
 
 
@@ -172,7 +206,7 @@ class Yak
                  exit 1
                end
 
-    Session::Bash.new.execute "echo -n \"#{string}\ | #{copy_cmd}"
+    Session::Bash.new.execute "echo -n \"#{string}\" | #{copy_cmd}"
   end
 
 
@@ -190,7 +224,7 @@ class Yak
       opt.release = nil
 
       opt.banner = <<-EOF
-#{opt.program_name} is a simple app to store and retrieve passwords securely.
+Yak is a simple app to store and retrieve passwords securely.
 Retrieved passwords get copied to the clipboard by default.
 
   Usage:
@@ -255,7 +289,7 @@ Retrieved passwords get copied to the clipboard by default.
   end
 
 
-  attr_reader :user, :data
+  attr_reader :user, :data, :use_completion
 
   ##
   # Create a new Yak instance for a given user:
@@ -278,6 +312,9 @@ Retrieved passwords get copied to the clipboard by default.
     @password_file = File.join @yak_dir, "password"
     @data_file     = options[:data_file] || File.join(@yak_dir, "data")
 
+    @key_list_file  = File.join @yak_dir, "keys"
+    @use_completion = options[:bash_completion]
+
     @session_pid = nil
     @session_pid = File.read(@pid_file).to_i if File.file? @pid_file
 
@@ -299,11 +336,12 @@ Retrieved passwords get copied to the clipboard by default.
 
     pid = fork do
       sleep @session_length
-      FileUtils.rm_f [@password_file, @pid_file]
+      remove_session_files
     end
 
+    pswd = sha_password # Do stdio before writing to file!
+    File.open(@password_file, "w+"){|f| f.write pswd }
     File.open(@pid_file,      "w+"){|f| f.write pid }
-    File.open(@password_file, "w+"){|f| f.write sha_password }
 
     Process.detach pid
   end
@@ -315,7 +353,16 @@ Retrieved passwords get copied to the clipboard by default.
   def end_session
     return unless @session_pid
     Process.kill 9, @session_pid rescue false
+    remove_session_files
+  end
+
+
+  ##
+  # Deletes files used during a session.
+
+  def remove_session_files
     FileUtils.rm_f [@password_file, @pid_file]
+    FileUtils.rm_f @key_list_file unless @use_completion == :always
   end
 
 
@@ -386,7 +433,11 @@ Retrieved passwords get copied to the clipboard by default.
     if data_file_exists?
       data = ""
       File.open(@data_file, "rb"){|f| data << f.read }
+
       @data = YAML.load decrypt(data)
+
+      write_key_list if @use_completion
+
     else
       @data = {}
       write_data
@@ -441,6 +492,16 @@ Retrieved passwords get copied to the clipboard by default.
   def write_data password=nil
     data = encrypt @data.to_yaml, password
     File.open(@data_file, "w+"){|f| f.write data}
+
+    write_key_list if @use_completion == :always
+  end
+
+
+  ##
+  # Write the key list file
+
+  def write_key_list
+    File.open(@key_list_file, "w+"){|f| f.write @data.keys.join(" ") }
   end
 
 

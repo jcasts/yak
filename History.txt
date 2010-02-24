@@ -1,8 +1,14 @@
 === 1.0.4 / 2010-02-23
 
+  * Enhancemennts:
+
+    * Added support for bash completion
+
   * Bugfixes:
 
     * Fixed CipherError namespace change for different Ruby versions
+
+    * List option now only returns keys
 
 === 1.0.3 / 2010-02-22
 

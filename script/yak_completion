@@ -1,0 +1,44 @@
+#!/bin/bash
+
+_valid_yak_option()
+{
+  local valid_prevs prevs_num curr_prev prev
+
+  prev="$1"
+
+  valid_prevs=( '-a' '--add' '-r' '--remove' '-l' '--list' '-p' '--print' 'yak' )
+  prevs_num=${#valid_prevs[@]}
+
+  for ((i=0;i<$prevs_num;i++)); do
+    curr_prev=${valid_prevs[${i}]}
+
+    if [ "$prev" == $curr_prev ]; then
+      echo "$prev"
+      return 0
+    fi
+  done
+  
+  return 1
+}
+
+_yak() 
+{
+  local cur prev opts yak_keys
+  COMPREPLY=()
+  cur="${COMP_WORDS[COMP_CWORD]}"
+  prev="${COMP_WORDS[COMP_CWORD-1]}"
+
+  yak_keys="$HOME/.yak/keys"
+
+
+  if [ -f "$yak_keys" ] && [ $(_valid_yak_option "$prev") ]; then
+    opts=$(cat $yak_keys)
+    COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
+    return 0
+  fi
+
+  return 1
+}
+
+complete -F _yak yak
+

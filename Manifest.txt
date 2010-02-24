@@ -1,5 +1,6 @@
 bin/yak
 lib/yak.rb
+script/yak_completion
 History.txt
 Manifest.txt
 Rakefile
