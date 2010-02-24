@@ -366,6 +366,8 @@ Retrieved passwords get copied to the clipboard by default.
   def start_session
     return unless @session_length
 
+    pswd = sha_password # Do stdio before writing to file!
+
     end_session if has_session?
 
     pid = fork do
@@ -373,7 +375,6 @@ Retrieved passwords get copied to the clipboard by default.
       remove_session_files
     end
 
-    pswd = sha_password # Do stdio before writing to file!
     File.open(@password_file, "w+"){|f| f.write pswd }
     File.open(@pid_file,      "w+"){|f| f.write pid }
 
