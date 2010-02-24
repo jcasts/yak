@@ -10,6 +10,8 @@
 
     * List option now only returns keys
 
+    * Rdoc README processing error fixed
+
 === 1.0.3 / 2010-02-22
 
   * Enhancements:

@@ -15,17 +15,17 @@ Config can be set in ~/.yakrc.
 
 Session is the length of time in seconds that Yak will remember the
 master password:
-  :session: 30
+  :session : 30
 
 If using sessions is not desired and you want to enter the
 master password every time, set:
-  :session: false
+  :session : false
 
 Always set the password by default, use:
-  :password: plain_text_password
+  :password : plain_text_password
 
 Turn off password confirmation prompts when a new password is entered:
-  :confirm_prompt: false
+  :confirm_prompt : false
 
 
 == Usage
