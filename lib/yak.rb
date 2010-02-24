@@ -29,7 +29,7 @@ require 'session'
 class Yak
 
   # Version of Yak.
-  VERSION = "1.0.6"
+  VERSION = "1.0.6.pre"
 
   # Default config used.
   DEFAULT_CONFIG = {:session => 30, :bash_completion => true}
@@ -102,8 +102,9 @@ class Yak
       "../script/yak_completion"
     completion_file = File.expand_path completion_file
 
-    success = `sudo cp #{completion_file} #{completion_dir}/. && echo 'true'`
-    success.chomp!
+    sudo    = "sudo" unless RUBY_PLATFORM =~ /cygwin/
+    success =
+      `#{sudo} cp #{completion_file} #{completion_dir}/. && echo 'true'`.chomp
 
     if success == "true"
       $stdout << "\nCopied yak_completion to #{completion_dir}\n\n"
