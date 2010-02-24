@@ -322,12 +322,15 @@ Retrieved passwords get copied to the clipboard by default.
     options[:key]    ||= argv.shift
     options[:value]  ||= argv.shift
 
-    if options[:action] == :retrieve && options[:key].nil?
-      $stderr << opts.to_s
-      exit 1
-    end
+    raise OptionParser::InvalidOption if
+      options[:action] == :retrieve && options[:key].nil?
 
     options
+
+  rescue OptionParser::InvalidOption
+    $stderr << "\nError: Invalid option\n\n"
+    $stderr << opts.to_s
+    exit 1
   end
 
 
