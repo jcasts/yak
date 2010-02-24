@@ -29,7 +29,7 @@ require 'session'
 class Yak
 
   # Version of Yak.
-  VERSION = "1.0.5"
+  VERSION = "1.0.6"
 
   # Default config used.
   DEFAULT_CONFIG = {:session => 30, :bash_completion => true}
@@ -44,6 +44,8 @@ class Yak
   #   ...
 
   def self.run argv=ARGV
+    trap("INT") { exit 1 }
+
     user = `whoami`.chomp
 
     check_user_setup user
