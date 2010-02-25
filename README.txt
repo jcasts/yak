@@ -27,6 +27,10 @@ Always set the password by default, use:
 Turn off password confirmation prompts when a new password is entered:
   :confirm_prompt : false
 
+Using bash completion for stored keys:
+  :bash_completion : true    #=> completion only available during session
+  :bash_completion : :always #=> completion always available (keys exposed)
+
 
 == Usage
 

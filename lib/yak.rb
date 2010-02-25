@@ -29,7 +29,7 @@ require 'session'
 class Yak
 
   # Version of Yak.
-  VERSION = "1.0.6.pre"
+  VERSION = "1.0.6"
 
   # Default config used.
   DEFAULT_CONFIG = {:session => 30, :bash_completion => true}

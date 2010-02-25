@@ -1,3 +1,13 @@
+=== 1.0.6 / 2010-02-25
+
+  * Bugfixes:
+
+    * Double master password request on first run
+
+    * Full cygwin support
+
+    * Full linux support
+
 === 1.0.5 / 2010-02-23
 
   * Bugfixes:
