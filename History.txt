@@ -1,3 +1,10 @@
+=== 1.0.7 / 2011-02-15
+
+  * Bugfixes:
+
+    * Removed -w flag when running ruby from the yak bin to avoid
+      warnings triggered by dependencies.
+
 === 1.0.6 / 2010-02-25
 
   * Bugfixes:
