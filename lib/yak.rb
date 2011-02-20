@@ -238,7 +238,7 @@ class Yak
                when /linux/  then "xclip -selection clipboard"
                when /cygwin/ then "putclip"
                else
-                 $stderr << "No clipboad cmd for platform #{RUBY_PLATFORM}\n"
+                 $stderr << "No clipboard cmd for platform #{RUBY_PLATFORM}\n"
                  exit 1
                end
 
