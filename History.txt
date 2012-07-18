@@ -1,3 +1,9 @@
+=== 1.0.7 / 2012-07-18
+
+* Bugfixes:
+
+  * Update homepage
+
 === 1.0.6 / 2010-02-25
 
   * Bugfixes:

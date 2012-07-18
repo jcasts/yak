@@ -1,6 +1,6 @@
 = Yak
 
-http://github.com/yaksnrainbows/yak
+http://yaks.me/yak
 
 == Description
 
